@@ -19,46 +19,47 @@
     </div>
     <div id="map"></div>
 
-    <script>
-        // Inisialisasi peta - letakkan koordinat pusat majlis anda
-        const map = L.map('map').setView([4.6296, 101.1420], 15); // Contoh: Pusat Tambun, Perak
+   <script>
+    // Inisialisasi peta - letakkan koordinat pusat majlis anda
+    const map = L.map('map').setView([4.6296, 101.1420], 15); // Contoh: Pusat Tambun, Perak
 
-        // Tambah lapisan peta dari OpenStreetMap
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
+    // Tambah lapisan peta dari OpenStreetMap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
 
-        let markers = {}; // Objek untuk menyimpan penanda (markers)
+    let markers = {}; // Objek untuk menyimpan penanda (markers)
 
-        // Fungsi untuk mendapatkan dan memaparkan lokasi
-        async function fetchLocations() {
-            try {
-                const response = await fetch('http://localhost:3000/get-locations');
-                const locations = await response.json();
+    // Fungsi untuk mendapatkan dan memaparkan lokasi
+    async function fetchLocations() {
+        try {
+            // BARIS INI TELAH DIKEMAS KINI
+            const response = await fetch('/get-locations');
+            const locations = await response.json();
 
-                for (const name in locations) {
-                    const staff = locations[name];
-                    const popupContent = `<b>${name}</b><br>${staff.jawatan}<br>Dikemaskini: ${staff.lastUpdate}`;
+            for (const name in locations) {
+                const staff = locations[name];
+                const popupContent = `<b>${name}</b><br>${staff.jawatan}<br>Tugas: ${staff.tugas || 'N/A'}<br>Tel: ${staff.telefon || 'N/A'}<br>Dikemaskini: ${staff.lastUpdate}`;
 
-                    if (staff.lat !== 0) { // Hanya tunjuk jika lokasi telah dikemaskini
-                        if (markers[name]) {
-                            // Kemaskini lokasi jika penanda sudah wujud
-                            markers[name].setLatLng([staff.lat, staff.lon]).setPopupContent(popupContent);
-                        } else {
-                            // Cipta penanda baru jika belum wujud
-                            markers[name] = L.marker([staff.lat, staff.lon]).addTo(map)
-                                .bindPopup(popupContent);
-                        }
+                if (staff.lat !== 0) { // Hanya tunjuk jika lokasi telah dikemaskini
+                    if (markers[name]) {
+                        // Kemaskini lokasi jika penanda sudah wujud
+                        markers[name].setLatLng([staff.lat, staff.lon]).setPopupContent(popupContent);
+                    } else {
+                        // Cipta penanda baru jika belum wujud
+                        markers[name] = L.marker([staff.lat, staff.lon]).addTo(map)
+                            .bindPopup(popupContent);
                     }
                 }
-            } catch (error) {
-                console.error('Gagal mendapatkan lokasi:', error);
             }
+        } catch (error) {
+            console.error('Gagal mendapatkan lokasi:', error);
         }
+    }
 
-        // Panggil fungsi setiap 5 saat
-        fetchLocations(); // Panggil sekali pada mulanya
-        setInterval(fetchLocations, 5000);
-    </script>
+    // Panggil fungsi setiap 5 saat
+    fetchLocations(); // Panggil sekali pada mulanya
+    setInterval(fetchLocations, 5000);
+</script>
 </body>
 </html>
