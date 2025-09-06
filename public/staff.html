@@ -38,57 +38,56 @@
         <p id="status"></p>
     </div>
 
-    <script>
-        const staffIdInput = document.getElementById('staffIdInput');
-        const nameInput = document.getElementById('nameInput');
-        const departmentInput = document.getElementById('departmentInput');
-        const phoneInput = document.getElementById('phoneInput');
-        const taskInput = document.getElementById('taskInput');
-        const updateBtn = document.getElementById('updateBtn');
-        const statusEl = document.getElementById('status');
-        
-        updateBtn.addEventListener('click', () => {
-            // Kumpul semua data dari borang
-            const data = {
-                id: staffIdInput.value.toUpperCase(),
-                name: nameInput.value,
-                department: departmentInput.value,
-                telefon: phoneInput.value,
-                tugas: taskInput.value,
-            };
+   <script>
+    const staffIdInput = document.getElementById('staffIdInput');
+    const nameInput = document.getElementById('nameInput');
+    const departmentInput = document.getElementById('departmentInput');
+    const phoneInput = document.getElementById('phoneInput');
+    const taskInput = document.getElementById('taskInput');
+    const updateBtn = document.getElementById('updateBtn');
+    const statusEl = document.getElementById('status');
 
-            if (!data.id || !data.name) {
-                alert('Sila isi sekurang-kurangnya ID dan Nama Penuh.');
-                return;
+    updateBtn.addEventListener('click', () => {
+        const data = {
+            id: staffIdInput.value.toUpperCase(),
+            name: nameInput.value,
+            department: departmentInput.value,
+            telefon: phoneInput.value,
+            tugas: taskInput.value,
+        };
+
+        if (!data.id || !data.name) {
+            alert('Sila isi sekurang-kurangnya ID dan Nama Penuh.');
+            return;
+        }
+
+        statusEl.textContent = 'Mendapatkan lokasi GPS...';
+        statusEl.style.color = 'orange';
+
+        navigator.geolocation.getCurrentPosition(async (position) => {
+            data.lat = position.coords.latitude;
+            data.lon = position.coords.longitude;
+
+            try {
+                // BARIS INI TELAH DIKEMAS KINI
+                const response = await fetch('/update-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                statusEl.textContent = `${result.message} (${new Date().toLocaleTimeString()})`;
+                statusEl.style.color = 'green';
+            } catch (error) {
+                statusEl.textContent = 'Gagal menghantar maklumat ke server.';
+                statusEl.style.color = 'red';
             }
 
-            statusEl.textContent = 'Mendapatkan lokasi GPS...';
-            statusEl.style.color = 'orange';
-
-            // Dapatkan lokasi GPS dan hantar semua data serentak
-            navigator.geolocation.getCurrentPosition(async (position) => {
-                data.lat = position.coords.latitude;
-                data.lon = position.coords.longitude;
-
-                try {
-                    const response = await fetch('http://localhost:3000/update-data', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(data)
-                    });
-                    const result = await response.json();
-                    statusEl.textContent = `${result.message} (${new Date().toLocaleTimeString()})`;
-                    statusEl.style.color = 'green';
-                } catch (error) {
-                    statusEl.textContent = 'Gagal menghantar maklumat ke server.';
-                    statusEl.style.color = 'red';
-                }
-
-            }, () => {
-                statusEl.textContent = 'Gagal mendapatkan lokasi. Sila benarkan akses GPS.';
-                statusEl.style.color = 'red';
-            });
+        }, () => {
+            statusEl.textContent = 'Gagal mendapatkan lokasi. Sila benarkan akses GPS.';
+            statusEl.style.color = 'red';
         });
-    </script>
+    });
+</script>
 </body>
 </html>
