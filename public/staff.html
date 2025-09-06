@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Konsol Petugas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background-color: #f0f0f0; margin: 20px; }
+        .container { background-color: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); text-align: center; width: 90%; max-width: 400px; margin-bottom: 20px; }
+        h2 { margin-top: 0; }
+        input { padding: 10px; font-size: 16px; margin-bottom: 15px; width: calc(100% - 22px); border: 1px solid #ccc; border-radius: 5px; }
+        label { font-weight: bold; text-align: left; display: block; margin-bottom: 5px; }
+        button { background-color: #4CAF50; color: white; padding: 15px 30px; font-size: 18px; cursor: pointer; border: none; border-radius: 5px; width: 100%; }
+        button:hover { background-color: #45a049; }
+        #status { margin-top: 15px; font-weight: bold; color: #555; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Borang Maklumat Petugas</h2>
+        
+        <label for="staffIdInput">PKT/NO/ID Petugas:</label>
+        <input type="text" id="staffIdInput" placeholder="Sila isi ID anda">
+
+        <label for="nameInput">Nama Penuh:</label>
+        <input type="text" id="nameInput" placeholder="Sila isi nama penuh">
+
+        <label for="departmentInput">Jabatan (Department):</label>
+        <input type="text" id="departmentInput" placeholder="Contoh: Keselamatan">
+
+        <label for="phoneInput">Nombor Telefon:</label>
+        <input type="text" id="phoneInput" placeholder="Contoh: 012-3456789">
+
+        <label for="taskInput">Lokasi Tugas:</label>
+        <input type="text" id="taskInput" placeholder="Contoh: Pintu Masuk Utama">
+        
+        <button id="updateBtn">📍 Hantar Maklumat & Lokasi GPS</button>
+        <p id="status"></p>
+    </div>
+
+    <script>
+        const staffIdInput = document.getElementById('staffIdInput');
+        const nameInput = document.getElementById('nameInput');
+        const departmentInput = document.getElementById('departmentInput');
+        const phoneInput = document.getElementById('phoneInput');
+        const taskInput = document.getElementById('taskInput');
+        const updateBtn = document.getElementById('updateBtn');
+        const statusEl = document.getElementById('status');
+        
+        updateBtn.addEventListener('click', () => {
+            // Kumpul semua data dari borang
+            const data = {
+                id: staffIdInput.value.toUpperCase(),
+                name: nameInput.value,
+                department: departmentInput.value,
+                telefon: phoneInput.value,
+                tugas: taskInput.value,
+            };
+
+            if (!data.id || !data.name) {
+                alert('Sila isi sekurang-kurangnya ID dan Nama Penuh.');
+                return;
+            }
+
+            statusEl.textContent = 'Mendapatkan lokasi GPS...';
+            statusEl.style.color = 'orange';
+
+            // Dapatkan lokasi GPS dan hantar semua data serentak
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                data.lat = position.coords.latitude;
+                data.lon = position.coords.longitude;
+
+                try {
+                    const response = await fetch('http://localhost:3000/update-data', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    const result = await response.json();
+                    statusEl.textContent = `${result.message} (${new Date().toLocaleTimeString()})`;
+                    statusEl.style.color = 'green';
+                } catch (error) {
+                    statusEl.textContent = 'Gagal menghantar maklumat ke server.';
+                    statusEl.style.color = 'red';
+                }
+
+            }, () => {
+                statusEl.textContent = 'Gagal mendapatkan lokasi. Sila benarkan akses GPS.';
+                statusEl.style.color = 'red';
+            });
+        });
+    </script>
+</body>
+</html>
